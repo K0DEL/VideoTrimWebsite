@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 app.secret_key = "hsfvdsbrfgi67548hfjbg478gfbhe"
-UPLOAD_FOLDER = "C:\\Users\\Keshav\\Documents\\CP\\python\\trim\\uploads"
+UPLOAD_FOLDER = "./uploads"
 
 # loading video dsa gfg intro video
 vedio_clip = mv.VideoFileClip("1.mp4")
@@ -55,7 +55,7 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             print(filename)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            file.save(os.path.join(UPLOAD_FOLDER, filename).replace("\\", "/"))
             return redirect(url_for('home'))
         print('NO')
         return redirect(url_for('home'))
