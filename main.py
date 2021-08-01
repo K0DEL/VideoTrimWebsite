@@ -1,33 +1,55 @@
 import moviepy.editor as mv
 from flask import Flask, render_template, request, flash, redirect, url_for, abort, send_from_directory  # noqa : E501
-# from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
-# from functools import wraps
 from random import choices
 from string import ascii_uppercase, digits
+from zipfile import ZipFile
 import os
+from math import floor
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 app.secret_key = "hsfvdsbrfgi67548hfjbg478gfbhe"
-UPLOAD_FOLDER = "./uploads"
+UPLOAD_FOLDER = "uploads"
+DOWNLOAD_FOLDER = "downloads"
 
 
-def trim_video(file_path):
-    vedio_clip = mv.VideoFileClip(file_path)
-    print(vedio_clip.duration)
-    sub_clip = vedio_clip.subclip(0, 15)
-    output_file_name = "output_1.mp4"
-    sub_clip.write_videofile(UPLOAD_FOLDER + "/" + output_file_name)
-    return output_file_name
+def trim_video(filename):
+    try:
+        K = 15  # K will be passed with function in the original program
+        file_path = os.path.join(
+            UPLOAD_FOLDER, filename).replace("\\", "/")
+        vedio_clip = mv.VideoFileClip(file_path)
 
-# def file_uploaded(function):
-#     @wraps(function)
-#     def decorated_function(*args, **kwargs):
-#         if args[0] == False:
-#             return abort(403)
-#         return function(*args, **kwargs)
-#     return decorated_function
+        all_paths = []
+        limit = floor(vedio_clip.duration) // K
+
+        for i in range(0, limit):
+            sub_clip = vedio_clip.subclip(i, K * (i+1))
+            all_paths.append(DOWNLOAD_FOLDER + "/" + f"{i}_" + filename)
+            sub_clip.write_videofile(all_paths[-1])
+
+        if floor(vedio_clip.duration) % K > 5:
+            sub_clip = vedio_clip.subclip(
+                K*i, (K*i) + int(vedio_clip.duration) % K)
+            all_paths.append(DOWNLOAD_FOLDER + "/" + f"{i}_" + filename)
+            sub_clip.write_videofile(all_paths[:-1])
+
+        with ZipFile(DOWNLOAD_FOLDER + "/" +
+                     filename.replace(".mp4", ".zip"), 'w') as zip:
+            # writing each file one by one
+            for file in all_paths:
+                zip.write(file)
+
+        for file in all_paths:
+            os.remove(file)
+        os.remove(file_path)
+
+        return DOWNLOAD_FOLDER + "/" + filename.replace(".mp4", ".zip")
+
+    except OSError:
+        print("There seems to be an error. Please upload the File Again.")
+        return ""
 
 
 def allowed_file(filename):
@@ -82,16 +104,16 @@ def upload():
 @app.route("/download")
 def download():
     filename = request.args.get('file_name')
-    if filename is None:
+    output_file_name = trim_video(filename)
+    print(output_file_name)
+    try:
+        return send_from_directory(
+            directory="./",
+            path=output_file_name,
+            as_attachment=False,
+        )
+    except FileNotFoundError:
         return abort(404)
-    file_path = os.path.join(
-        UPLOAD_FOLDER, filename).replace("\\", "/")
-    output_file_name = trim_video(file_path)
-    return send_from_directory(
-        directory="uploads",
-        path=output_file_name,
-        as_attachment=False,
-    )
 
 
 if __name__ == '__main__':
