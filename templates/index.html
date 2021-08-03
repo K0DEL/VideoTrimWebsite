@@ -7,19 +7,6 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Upload new File</h1>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        {% for message in messages %}
-          <p>{{message}}</p>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    <form method=post enctype=multipart/form-data action="{{url_for('upload')}}">
-      <input type=file name=file>
-      <br>
-      <br>
-      <input type=submit value=Upload>
-    </form>
+    <a href="{{url_for('upload')}}">upload</a>
 </body>
 </html>

@@ -9,7 +9,7 @@ DOWNLOAD_FOLDER = "downloads"
 
 def trim_video(filename):
     try:
-        K = 15  # K will be passed with function in the original program
+        K = 12  # K will be passed with function in the original program
         file_path = os.path.join(
             UPLOAD_FOLDER, filename).replace("\\", "/")
         vedio_clip = mv.VideoFileClip(file_path)
@@ -22,11 +22,13 @@ def trim_video(filename):
             all_paths.append(DOWNLOAD_FOLDER + "/" + f"{i}_" + filename)
             sub_clip.write_videofile(all_paths[-1])
 
+        i += 1
+
         if floor(vedio_clip.duration) % K > 5:
             sub_clip = vedio_clip.subclip(
                 K*i, (K*i) + int(vedio_clip.duration) % K)
             all_paths.append(DOWNLOAD_FOLDER + "/" + f"{i}_" + filename)
-            sub_clip.write_videofile(all_paths[:-1])
+            sub_clip.write_videofile(all_paths[-1])
 
         with ZipFile(DOWNLOAD_FOLDER + "/" +
                      filename.replace(".mp4", ".zip"), 'w') as zip:
