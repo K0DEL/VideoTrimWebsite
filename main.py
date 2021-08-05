@@ -7,6 +7,15 @@ from zipfile import ZipFile
 import os
 from math import floor
 from flask_session import Session
+from flask_apscheduler import APScheduler
+from time import time
+
+# TODO 2: Refactor The Code
+
+
+class Config:
+    SCHEDULER_API_ENABLED = True
+
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
@@ -14,12 +23,38 @@ app.secret_key = "hsfvdsbrfgi67548hfjbg478gfbhe"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+app.config.from_object(Config())
+scheduler = APScheduler()
+
+
 UPLOAD_FOLDER = "uploads"
 DOWNLOAD_FOLDER = "downloads"
+SESSION_FOLDER = "flask_session"
+
+
+@scheduler.task('interval', id='do_job_1', seconds=1800,
+                misfire_grace_time=3600)
+def every_half_an_hour():
+    if os.path.isdir(DOWNLOAD_FOLDER) and os.path.isdir(SESSION_FOLDER):
+        print("Deletion Performed")
+        now = time()
+        for f in os.listdir(DOWNLOAD_FOLDER):
+            f = os.path.join(DOWNLOAD_FOLDER, f)
+            if os.stat(f).st_mtime < now - 1800:
+                os.remove(f)
+
+        for f in os.listdir(SESSION_FOLDER):
+            f = os.path.join(SESSION_FOLDER, f)
+            if os.stat(f).st_mtime < now - 1800:
+                os.remove(f)
+
+
+scheduler.start()
 
 
 def trim_video(filename):
     try:
+
         K = 12  # TODO 1: K will be passed with function.
         file_path = os.path.join(
             UPLOAD_FOLDER, filename).replace("\\", "/")
@@ -56,7 +91,7 @@ def trim_video(filename):
 
     except OSError:
         flash("There seems to be an error. Please upload the File Again.")
-        return ""
+        return
 
 
 def allowed_file(filename):
@@ -102,24 +137,21 @@ def process():
         if file and allowed_file(file.filename):
             # filename = secure_filename(file.filename)
 
-            filename = ''.join(choices(ascii_uppercase + digits, k=10))
+            filename = ''.join(choices(ascii_uppercase + digits, k=15))
             filename = filename + ".mp4"
 
             file_path = os.path.join(
                 UPLOAD_FOLDER, filename).replace("\\", "/")
             file.save(file_path)
-            session['input_file_name'] = filename
-            return redirect(url_for('download'))
+            trim_video(filename)
+            return redirect(url_for('complete'))
         flash("The File Format Must be Mp4")
         return redirect(url_for('home'))
 
 
 @app.route("/download")
 def download():
-    filename = session.get('input_file_name')
-    trim_video(filename)
     output_file_name = session.get('output_file_name')
-    print(output_file_name)
     try:
         return send_from_directory(
             directory="./",
@@ -130,5 +162,10 @@ def download():
         return abort(404)
 
 
+@app.route('/complete')
+def complete():
+    return render_template('complete.html')
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)

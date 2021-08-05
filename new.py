@@ -5,6 +5,7 @@ from math import floor
 
 UPLOAD_FOLDER = "uploads"
 DOWNLOAD_FOLDER = "downloads"
+TEMPORARY_FOLDER = "temp"
 
 
 def trim_video(filename):
@@ -47,4 +48,10 @@ def trim_video(filename):
         return ""
 
 
-trim_video("1.mp4")
+output = trim_video("1.mp4").replace(".mp4", ".zip")
+os.rename(output,
+          output.replace(
+              DOWNLOAD_FOLDER, TEMPORARY_FOLDER))
+# shutil.move(output,
+#             output.replace(
+#                 DOWNLOAD_FOLDER, TEMPORARY_FOLDER))
