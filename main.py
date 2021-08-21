@@ -6,7 +6,7 @@ import os
 from flask_session import Session
 from trimmer import trim_video
 from scheduler import scheduler
-from constants import UPLOAD_FOLDER
+from constants import UPLOAD_FOLDER, VIDEO_LIMIT
 
 
 class Config:
@@ -14,8 +14,8 @@ class Config:
 
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
-app.secret_key = "hsfvdsbrfgi67548hfjbg478gfbhe"
+app.config['MAX_CONTENT_LENGTH'] = VIDEO_LIMIT
+app.secret_key = "k2s04isthebestcompoundnameihaveeverheardinmahlife"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
