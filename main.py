@@ -6,6 +6,7 @@ import os
 from flask_session import Session
 from trimmer import trim_video
 from scheduler import scheduler
+from pathlib import Path
 from constants import UPLOAD_FOLDER, VIDEO_LIMIT
 
 
@@ -73,6 +74,7 @@ def process():
             file_path = os.path.join(
                 UPLOAD_FOLDER, filename).replace("\\", "/")
 
+            Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
             file.save(file_path)
             session['output_file_name'] = trim_video(filename)
             return redirect(url_for('complete'))

@@ -3,12 +3,14 @@ from flask import flash
 from zipfile import ZipFile
 import os
 from math import floor
+from pathlib import Path
 from constants import DOWNLOAD_FOLDER, UPLOAD_FOLDER
 
 
 def trim_video(filename):
     try:
 
+        Path(DOWNLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
         K = 12  # TODO 1: K will be passed with function.
         file_path = os.path.join(
             UPLOAD_FOLDER, filename).replace("\\", "/")
