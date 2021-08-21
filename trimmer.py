@@ -1,33 +1,32 @@
 import moviepy.editor as mv
+from flask import flash
 from zipfile import ZipFile
 import os
 from math import floor
-
-UPLOAD_FOLDER = "uploads"
-DOWNLOAD_FOLDER = "downloads"
-TEMPORARY_FOLDER = "temp"
+from constants import DOWNLOAD_FOLDER, UPLOAD_FOLDER
 
 
 def trim_video(filename):
     try:
-        K = 12  # K will be passed with function in the original program
+
+        K = 12  # TODO 1: K will be passed with function.
         file_path = os.path.join(
             UPLOAD_FOLDER, filename).replace("\\", "/")
-        vedio_clip = mv.VideoFileClip(file_path)
+        video_clip = mv.VideoFileClip(file_path)
 
         all_paths = []
-        limit = floor(vedio_clip.duration) // K
+        limit = floor(video_clip.duration) // K
 
         for i in range(0, limit):
-            sub_clip = vedio_clip.subclip(i, K * (i+1))
+            sub_clip = video_clip.subclip(i, K * (i+1))
             all_paths.append(DOWNLOAD_FOLDER + "/" + f"{i}_" + filename)
             sub_clip.write_videofile(all_paths[-1])
 
         i += 1
 
-        if floor(vedio_clip.duration) % K > 5:
-            sub_clip = vedio_clip.subclip(
-                K*i, (K*i) + int(vedio_clip.duration) % K)
+        if floor(video_clip.duration) % K > 5:
+            sub_clip = video_clip.subclip(
+                K*i, (K*i) + int(video_clip.duration) % K)
             all_paths.append(DOWNLOAD_FOLDER + "/" + f"{i}_" + filename)
             sub_clip.write_videofile(all_paths[-1])
 
@@ -41,17 +40,9 @@ def trim_video(filename):
             os.remove(file)
         os.remove(file_path)
 
-        return DOWNLOAD_FOLDER + "/" + filename
+        return DOWNLOAD_FOLDER + \
+            "/" + filename.replace(".mp4", ".zip")
 
     except OSError:
-        print("There seems to be an error. Please upload the File Again.")
-        return ""
-
-
-output = trim_video("1.mp4").replace(".mp4", ".zip")
-os.rename(output,
-          output.replace(
-              DOWNLOAD_FOLDER, TEMPORARY_FOLDER))
-# shutil.move(output,
-#             output.replace(
-#                 DOWNLOAD_FOLDER, TEMPORARY_FOLDER))
+        flash("There seems to be an error. Please upload the File Again.")
+        return
